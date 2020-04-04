@@ -58,14 +58,24 @@ int number(int x, int y) {
     return 4 * y + x;
 }
 
+
+// (x,y)좌표로부터 이미지상 X좌표.
+// 사실 여기서 y는 안쓰이는 파라미터지만, coolX2 이런식으로 명명하면 훨씬 헷갈리니까
+// 좌표값을 받는다는 형식이란걸 일단 이렇게 표기합시다.
+int coolX(int x, int y) {
+    return 305 + 150 * x;
+}
+int coolY(int x, int y) {
+    return 460 - 150 * y;
+}
 // num 번쨰 조각의 원래 위치의 이미지상 X좌표
 int coolX(int num) {
-    return 305 + 150 * arrayX(num);
+    return coolX(arrayX(num), 0);
 }
 // num 번쨰 조각의 원래 위치의 이미지상 Y좌표.
 // 주의! 이미지 좌표는 자체정의한 배열의 Y좌표 방향과 반대.
 int coolY(int num) {
-    return 460 - 150 * arrayY(num);
+    return coolY(0, arrayY(num));
 }
 
 // 마우스 입력을 받았을때 쓰일 함수.
@@ -121,11 +131,24 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction) {
     int num = findNum(object);
     // piece가 아닌걸 클릭하면 -1 반환했으니, piece중 하나 클릭한 경우만
     if (num >= 0) {
-        int tx = currentX[num], ty = currentY[num];
-        int direction = checkHPieceDirection(tx, ty);
+        int cx = currentX[num], cy = currentY[num];
+        int direction = checkHPieceDirection(cx, cy);
+        // 만약 인접해있다면, 자리 맞바꾸기
         if (direction > -1) {
-            //TODO hPiece와 현재 클릭한 piece 자리바꾸기
-            hideObject(piece[num]);
+            int tx = hX, ty = hY;
+
+            //hPiece 옮기기
+            hX = cx, hY = cy;
+            currentX[hNum] = cx, currentY[hNum] = cy;
+            arr[cx][cy] = hNum;
+
+            //클릭한 piece 옮기기
+            currentX[num] = tx, currentY[num] = ty;
+            arr[tx][ty] = num;
+
+            locateObject(piece[hNum], scene1, coolX(num), coolY(num));
+            locateObject(piece[num], scene1, coolX(cx + dx[direction], 0), coolY(0, cy + dy[direction]));
+            
         }
     }
     }
@@ -137,6 +160,7 @@ int main()
     
     scene1 = createScene("틀린그림찾기", "Images\\TEST.png");
 
+    // 조각 생성
     for (int i = 0; i < 16; i++) {
         piece[i] = createObject("조각", imgFileLocate[i]);
         locateObject(piece[i], scene1, coolX(i), coolY(i));
@@ -150,40 +174,9 @@ int main()
     hX = 0, hY = 0, hNum = 0; // TODO 아직 셔플기능 안넣었으므로 임의지정
     hideObject(piece[hNum]);
 
-    /*
-    piece[0] = createObject("조각", "Images\\1.png");
-    locateObject(piece[0], scene1, 200, 200);
-    showObject(piece[0]);
-    */
+    
     startGame(scene1);
-    /*
-    setMouseCallback(mouseCallback);
-    scene1 = createScene("슬라이드퍼즐", "Images\\배경.png");
-    const char* a = "Images\\배경.png";
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            piece[i][j] = createObject("조각", "Images\\");
-        }
-    }
-    problem = createObject("problem", "Images\\problem.png");
-    locateObject(problem, scene1, 0, 0);
-    showObject(problem);
-
-    for (int i = 0; i < 7; i++) {
-        left[i] = createObject("체크마크", "Images\\check.png");
-        locateObject(left[i], scene1, leftX[i] - 25, Y[i] - 25);
-
-        right[i] = createObject("체크마크", "Images\\check.png");
-        locateObject(right[i], scene1, rightX[i] - 25, Y[i] - 25);
-    }
-
-    showMessage("좌우에 틀린 곳을 찾아보세요.");
-
-    startGame(scene1);
-    */
-
-   
-
+    
 }
 
 
