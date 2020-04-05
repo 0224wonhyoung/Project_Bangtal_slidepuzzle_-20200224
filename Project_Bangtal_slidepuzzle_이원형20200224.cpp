@@ -32,6 +32,7 @@ using namespace std;
 SceneID scene1;
 ObjectID startButton;
 ObjectID piece[16];
+TimerID timer1;
 
 // arr : 4 X 4 퍼즐의 현재상태를 저장.
 int arr[4][4];
@@ -47,8 +48,10 @@ const char* imgFileLocate[16] = { "Images\\in1.jpg", "Images\\in2.jpg", "Images\
 // hideX,Y,Num.  현재 hide된 piece의 X,Y좌표와 몇번째인지
 int hX = 0, hY = 0, hNum=0;
 
+// i 번째 조각이 현재 맞는 위치에 있는지.
 bool correct[16];
 
+// playing : 게임진행중, finish : 게임끝(클리어)
 bool playing = false;
 bool finish = false;
 
@@ -63,10 +66,7 @@ void test() {
     }
 }
 
-int min(int a, int b) {
-    return a > b ? b : a;
-}
-
+// 0 ~ n-1 중 random한 숫자 생성
 int myRand(int n) {
     int k = rand() % n;
     if (n > 0) {
@@ -244,8 +244,14 @@ void shuffle() {
 void mouseCallback(ObjectID object, int x, int y, MouseAction) {
     if (object == startButton) {
         hideObject(startButton);
-        playing = true;
         shuffle();
+        finish = false;
+        playing = true;
+        
+        hideTimer();
+        setTimer(timer1, 3600.0f);
+        startTimer(timer1);
+
     }
     else if(playing){
         // num : 클릭한 조각 번호
@@ -279,8 +285,14 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction) {
                 finish = checkFin();
                 if (finish) {
                     playing = false;
+                    setObjectImage(startButton, "Images\\restart.png");
                     showObject(startButton);
                     showObject(piece[hNum]);
+                    stopTimer(timer1);
+                    float time = 3600 - getTimer(timer1);
+                    setTimer(timer1, time);
+                    showTimer(timer1);
+                    
                 }
             }
         }
@@ -311,17 +323,8 @@ int main()
     initializeCurrentXY();
     initializeCorrect();
     
-    /*
-    srand((unsigned int)time(NULL));
-    hNum = rand() % 15;
-    hX = arrayX(hNum);
-    hY = arrayY(hNum);
-     
-    hideObject(piece[hNum]);
-    */
-    //shuffle();
-    //test();
-    
+    timer1 = createTimer(3600.0f);
+
     
     startGame(scene1);
     
